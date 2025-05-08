@@ -47,9 +47,15 @@ def match_pattern(input_line, pattern):
                 raise RuntimeError("Unclosed character class")
             tokens.append(pattern[i:end+1])
             i =end+1
+        elif pattern[i] == '+':
+            if not tokens:
+                raise RuntimeError("Nothing to repeat with '+'")
+            tokens[-1] = (tokens[-1],'+')
+            i+=1
         else:
             tokens.append(pattern[i])
             i+=1
+    print("Tokens:", tokens, file=sys.stderr)
 
 
     if anchored_start and anchored_end :
@@ -90,13 +96,30 @@ def match_pattern(input_line, pattern):
     else:
         for start in range(len(input_line)-len(tokens)+1):
             matched = True
+            input_index = start
+            token_index = 0
 
-            for i,token in enumerate(tokens):
-                if not check_token_match(input_line[start + i],token):
-                    matched = False
-                    break
+            while token_index < len(tokens):
+                token = tokens[token_index]
 
-            if matched:
+                if token is (subtoken, '+'):
+                    
+                    if input_index >= len(input_line) or not check_token_match(input_line[input_index],subtoken):
+                        matched = False
+                        break
+                    
+                    while input_index < len(input_line) and check_token_match(input_line[input_index],subtoken):
+                        input_index+=1
+                    token_index+=1
+
+                else:
+                    if input_index >= len(input_line) or not check_token_match(input_line[input_index],token):
+                        matched = False
+                        break
+                    input_index+=1
+                    token_index+=1
+
+            if token_index == len(tokens):
                 return True
         return False
     
