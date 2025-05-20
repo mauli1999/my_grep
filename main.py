@@ -66,7 +66,7 @@ def match_pattern(input_line, pattern):
                 return False
         return True
         
-    if anchored_start:
+    elif anchored_start:
         if len(input_line) < len(tokens):
             return False
         
@@ -102,7 +102,8 @@ def match_pattern(input_line, pattern):
             while token_index < len(tokens):
                 token = tokens[token_index]
 
-                if token is (subtoken, '+'):
+                if isinstance(token,tuple) and token[1]=='+':
+                    subtoken = token[0]
                     
                     if input_index >= len(input_line) or not check_token_match(input_line[input_index],subtoken):
                         matched = False
