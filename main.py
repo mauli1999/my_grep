@@ -52,6 +52,11 @@ def match_pattern(input_line, pattern):
                 raise RuntimeError("Nothing to repeat with '+'")
             tokens[-1] = (tokens[-1],'+')
             i+=1
+        elif pattern[i] == '?':
+            if not tokens:
+                raise RuntimeError("Nothing to repeat with '+'")
+            tokens[-1] = (tokens[-1],'?')
+            i+=1
         else:
             tokens.append(pattern[i])
             i+=1
@@ -94,7 +99,7 @@ def match_pattern(input_line, pattern):
         return matched
     
     else:
-        for start in range(len(input_line)-len(tokens)+1):
+        for start in range(len(input_line)+1):
             matched = True
             input_index = start
             token_index = 0
@@ -102,7 +107,14 @@ def match_pattern(input_line, pattern):
             while token_index < len(tokens):
                 token = tokens[token_index]
 
-                if isinstance(token,tuple) and token[1]=='+':
+                if isinstance(token,tuple) and token[1]=='?':
+                    subtoken = token[0]
+
+                    if input_index < len(input_line) and check_token_match(input_line[input_index],subtoken):
+                        input_index+=1
+                    token_index+=1
+
+                elif isinstance(token,tuple) and token[1]=='+':
                     subtoken = token[0]
                     
                     if input_index >= len(input_line) or not check_token_match(input_line[input_index],subtoken):
