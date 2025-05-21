@@ -6,6 +6,9 @@ def check_token_match(char, token):
     elif token == r"\w":
         return char.isalnum() or char == "_"
     
+    elif token ==".":
+        return True
+    
     elif token.startswith('[^') and token.endswith(']'):
         excluded_chars = token[2:-1]
         return char not in excluded_chars
@@ -47,6 +50,14 @@ def match_pattern(input_line, pattern):
                 raise RuntimeError("Unclosed character class")
             tokens.append(pattern[i:end+1])
             i =end+1
+        
+        elif pattern[i] =='(':
+            end = pattern.find(')',i)
+            if end == -1:
+                raise RuntimeError("Unclosed character class")
+            tokens.append(pattern[i:end+1])
+            i =end+1
+
         elif pattern[i] == '+':
             if not tokens:
                 raise RuntimeError("Nothing to repeat with '+'")
@@ -61,9 +72,17 @@ def match_pattern(input_line, pattern):
             tokens.append(pattern[i])
             i+=1
     print("Tokens:", tokens, file=sys.stderr)
+    
+    if len(tokens) == 1 and tokens[0].startswith('(') and tokens[0].endswith(')'):
+        group = tokens[0][1:-1]
+        alternatives = group.split('|')
 
+        for alt in alternatives:
+            if match_pattern(input_line,alt):
+                return True
+        return False
 
-    if anchored_start and anchored_end :
+    elif anchored_start and anchored_end :
         if len(input_line)!= len(tokens):
             return False
         for i,token in enumerate(tokens):
@@ -147,8 +166,10 @@ def main():
     print("Logs from your program will appear here!", file=sys.stderr)
 
     if match_pattern(input_line, pattern):
+        print("pattern matched")
         exit(0)
     else:
+        print("pattern not matched")
         exit(1)
 
 
